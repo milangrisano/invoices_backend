@@ -27,3 +27,6 @@ prebuild/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Ai skills
+.nestjs-helper.md
