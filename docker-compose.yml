@@ -6,13 +6,43 @@ services:
     container_name: invoices-db
     restart: always
     expose:
-      - "5432"
+      - "5432" # Private within docker network! Protected!
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: milangrisano/invoices-backend:latest # Pushed successfully to DockerHub!
+    container_name: invoices-backend-api
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000" # Expose public API REST endpoint
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: db # Points to internal db service container
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD}
+      HERB_API_KEY: ${HERB_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:
