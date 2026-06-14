@@ -29,5 +29,5 @@ prebuild/
 Thumbs.db
 
 # Ai skills
-.nestjs-helper.skill
+nestjs-helper.skill
 .gemini
