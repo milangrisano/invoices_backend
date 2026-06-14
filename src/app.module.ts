@@ -25,7 +25,7 @@ import { ProductsModule } from './products/products.module';
         JWT_EXPIRATION: Joi.string().default('15m'),
         JWT_REFRESH_SECRET: Joi.string().required(),
         JWT_REFRESH_EXPIRATION: Joi.string().default('7d'),
-        INITIAL_ADMIN_EMAIL: Joi.string().email().required(),
+        INITIAL_ADMIN_EMAIL: Joi.string().email({ tlds: { allow: false } }).required(),
         INITIAL_ADMIN_PASSWORD: Joi.string().required(),
         HERB_API_KEY: Joi.string().required(),
       }),

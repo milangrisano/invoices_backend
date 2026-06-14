@@ -14,12 +14,16 @@ import {
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
+import { ApiQuery, ApiTags, ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { CombinedAuthGuard } from '../auth/guards/combined-auth.guard';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('products')
+@ApiTags('products')
+@ApiBearerAuth()
+@ApiSecurity('x-api-key')
 @UseGuards(CombinedAuthGuard) // Protect all product endpoints with combined auth (JWT or ApiKey)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
@@ -38,6 +42,9 @@ export class ProductsController {
   }
 
   @Get()
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of items per page' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for product name' })
   async findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
