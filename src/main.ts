@@ -11,8 +11,12 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
 
-  // 1. HTTP Security Headers with Helmet
-  app.use(helmet());
+  // 1. HTTP Security Headers with Helmet (configured to allow Swagger UI inline scripts and styles)
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    }),
+  );
 
   // 2. Enable CORS
   app.enableCors();
