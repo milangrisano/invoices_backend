@@ -192,3 +192,135 @@ Notas de seguridad:
       - OpenAPI / Swagger configurado e integrado bajo la ruta /api con soportes visuales para autenticaciones JWT y API Keys.
 
   ---
+
+## CI & CD (Integración y Despliegue Continuo)
+
+Este apartado detalla el plan paso a paso para construir la imagen Docker de la aplicación, subirla automáticamente a tu cuenta de **DockerHub** mediante **GitHub Actions**, y poder desplegar todo (Base de Datos + API del backend) en cualquier entorno (local o NAS) con un único comando utilizando `docker-compose.yml`.
+
+### Paso 1: Crear el `Dockerfile` de Producción (Multi-Stage)
+Crearemos un archivo `Dockerfile` optimizado en la raíz del proyecto para construir la imagen de NestJS usando `pnpm`:
+```dockerfile
+# Stage 1: Build
+FROM node:20-alpine AS builder
+RUN npm install -g pnpm
+WORKDIR /usr/src/app
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm run build
+
+# Stage 2: Production
+FROM node:20-alpine
+RUN npm install -g pnpm
+WORKDIR /usr/src/app
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+COPY --from=builder /usr/src/app/dist ./dist
+EXPOSE 3000
+CMD ["node", "dist/main"]
+```
+
+### Paso 2: Configurar las Credenciales de DockerHub en GitHub Secrets
+Para permitir que GitHub Actions suba la imagen a tu cuenta de DockerHub de forma segura:
+1. Ve a tu repositorio en GitHub.
+2. Navega a **Settings** > **Secrets and variables** > **Actions**.
+3. Añade dos nuevos secretos:
+   - `DOCKERHUB_USERNAME`: Tu usuario de DockerHub (ej: `tu_usuario_dockerhub`).
+   - `DOCKERHUB_TOKEN`: Tu token de acceso de DockerHub (generado en DockerHub en *Account Settings* > *Security* > *New Access Token*).
+
+### Paso 3: Crear el Workflow de GitHub Actions
+Crearemos el archivo `.github/workflows/deploy.yml` en la raíz del proyecto para automatizar la compilación y subida de la imagen ante cada `push` en la rama `main`:
+```yaml
+name: CI/CD - Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: $${{ secrets.DOCKERHUB_USERNAME }}
+          password: $${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: $${{ secrets.DOCKERHUB_USERNAME }}/invoices-backend:latest
+```
+
+### Paso 4: Configurar el `docker-compose.yml` Unificado de Producción
+Actualizaremos el archivo `docker-compose.yml` para levantar tanto la base de datos como la API del backend descargando la imagen compilada directamente desde tu cuenta de DockerHub:
+```yaml
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: invoices-db
+    restart: always
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_USER: $${DB_USERNAME}
+      POSTGRES_PASSWORD: $${DB_PASSWORD}
+      POSTGRES_DB: $${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$$$POSTGRES_USER -d $$$$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: tu_usuario_dockerhub/invoices-backend:latest
+    container_name: invoices-backend-api
+    restart: always
+    ports:
+      - "$${PORT:-3000}:3000"
+    environment:
+      PORT: $${PORT:-3000}
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: $${DB_USERNAME}
+      DB_PASSWORD: $${DB_PASSWORD}
+      DB_DATABASE: $${DB_DATABASE}
+      JWT_SECRET: $${JWT_SECRET}
+      JWT_EXPIRATION: $${JWT_EXPIRATION}
+      JWT_REFRESH_SECRET: $${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRATION: $${JWT_REFRESH_EXPIRATION}
+      INITIAL_ADMIN_EMAIL: $${INITIAL_ADMIN_EMAIL}
+      INITIAL_ADMIN_PASSWORD: $${INITIAL_ADMIN_PASSWORD}
+      HERB_API_KEY: $${HERB_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+```
+
+### Paso 5: Despliegue en el NAS / Servidor Remoto
+Una vez que el flujo de GitHub se ejecute y suba la imagen, para desplegar el sistema en tu NAS o servidor local solo requerirás:
+1. Copiar tu archivo `.env` y el archivo `docker-compose.yml` unificado al NAS.
+2. Correr el comando en la carpeta del NAS:
+   ```bash
+   docker compose pull && docker compose up -d
+   ```
