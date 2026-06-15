@@ -71,7 +71,7 @@ export class AuthService {
       await this.refreshTokenRepository.save(storedToken);
 
       // 4. Generate new pair
-      return this.generateTokenPair(storedToken.user);
+      return await this.generateTokenPair(storedToken.user);
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }

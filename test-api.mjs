@@ -3,7 +3,7 @@
  * Runs full integration checks across all endpoints and auth strategies.
  */
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const HERB_API_KEY = 'herb_sec_key_v1_8cfc7a72671340a6b107e6e5898d9ba8';
 
 async function runTests() {
