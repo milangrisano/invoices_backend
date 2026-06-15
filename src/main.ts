@@ -15,6 +15,7 @@ async function bootstrap() {
   app.use(
     helmet({
       contentSecurityPolicy: false,
+      hsts: false,                // Disable HSTS to prevent forcing HTTPS in local/private network testing
     }),
   );
 
