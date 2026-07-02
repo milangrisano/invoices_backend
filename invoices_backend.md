@@ -324,3 +324,15 @@ Una vez que el flujo de GitHub se ejecute y suba la imagen, para desplegar el si
    ```bash
    docker compose pull && docker compose up -d
    ```
+
+### Paso 6: Enriquecimiento de la Documentación de la API (Swagger)
+Para solucionar el problema de los esquemas vacíos en la interfaz de Swagger y proporcionar información detallada sobre campos requeridos, opcionales, tipos y ejemplos descriptivos, se implementó la siguiente estrategia técnica:
+
+1. **Habilitación de Swagger CLI Plugin (`nest-cli.json`)**:
+   Configuración del plugin oficial `@nestjs/swagger` dentro de las opciones de compilación. Esto le permite a NestJS analizar estáticamente el código de TypeScript (tipos, nulabilidad con `?`, etc.) para deducir automáticamente las propiedades de los DTOs y Entities en OpenAPI, poblando los esquemas sin necesidad de escribir código repetitivo.
+
+2. **Decoradores `@ApiProperty` en DTOs Clave**:
+   Añadido de decoradores con metadata descriptiva detallada, incluyendo descripciones en español (`description`), ejemplos claros (`example`), y el estado de obligatoriedad (`required: true/false`). Esto ayuda a los desarrolladores y servicios externos (como Herb) a conocer con exactitud la estructura de datos aceptada por la API.
+
+3. **Soporte de Validación en la Documentación**:
+   Integración directa de las restricciones de `class-validator` (como valores mínimos, patrones o correos válidos) para que se reflejen de forma clara dentro de los esquemas interactivos de la UI de Swagger.

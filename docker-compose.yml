@@ -3,8 +3,8 @@ services:
     image: postgres:15-alpine
     container_name: invoices-db
     restart: always
-    expose:
-      - "5432" # Private within docker network! Protected!
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}

@@ -1,98 +1,121 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Invoices Backend (NestJS + PostgreSQL)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este es el backend de facturación desarrollado con **NestJS**, **TypeORM** y **PostgreSQL**. Cuenta con autenticación por JWT para la aplicación web y claves de API (ApiKeys) para integraciones de servicios externos (como Herb u otros sistemas de automatización).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🛠️ Requisitos Previos
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Antes de comenzar, asegúrate de tener instalado en tu máquina local:
+1. **Node.js** (Versión 18 o 20 recomendada)
+2. **pnpm** (Gestor de paquetes): `npm install -g pnpm`
+3. **Docker Desktop**: Para ejecutar la base de datos PostgreSQL de manera local y aislada.
+4. **Git**: Para el control de versiones.
 
-## Project setup
+---
 
+## 🚀 Configuración del Entorno de Desarrollo Local
+
+Sigue estos pasos para poner en marcha el proyecto en tu entorno local por primera vez:
+
+### Paso 1: Instalar Dependencias
+Instala todas las librerías necesarias del proyecto utilizando `pnpm`:
 ```bash
-$ pnpm install
+pnpm install
 ```
 
-## Compile and run the project
-
+### Paso 2: Configurar Variables de Entorno
+Crea tu archivo de entorno local si no lo tienes. El proyecto ya incluye un archivo de ejemplo:
 ```bash
-# development
-$ pnpm run start
+cp .env.example .env
+```
+*Nota: Si ya tienes un archivo `.env`, asegúrate de que la variable `DB_HOST` esté configurada como `localhost` para el desarrollo local.*
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+### Paso 3: Levantar la Base de Datos (PostgreSQL)
+Inicia el contenedor de Docker únicamente para el servicio de base de datos (`db`). Esto evitará que consumas recursos innecesarios ejecutando la API dentro de Docker mientras desarrollas:
+```bash
+docker compose up -d db
 ```
 
-## Run tests
+### Paso 4: Iniciar el Servidor de Desarrollo
+Arranca la aplicación de NestJS en modo "Watch". El servidor compilará el código y se reiniciará automáticamente con cada cambio que guardes:
+```bash
+pnpm start:dev
+```
+La API estará disponible en: [http://localhost:3000](http://localhost:3000)  
+La documentación interactiva de Swagger UI estará disponible en: [http://localhost:3000/api](http://localhost:3000/api)
+
+---
+
+## 🧪 Ejecución de Pruebas
+
+Para garantizar que tus modificaciones no rompan funcionalidades existentes, ejecuta la suite de pruebas:
 
 ```bash
-# unit tests
-$ pnpm run test
+# Pruebas unitarias
+pnpm run test
 
-# e2e tests
-$ pnpm run test:e2e
+# Pruebas de integración E2E (requiere que la base de datos esté corriendo)
+pnpm run test:e2e
 
-# test coverage
-$ pnpm run test:cov
+# Cobertura de código (Coverage)
+pnpm run test:cov
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🔄 Flujo de Trabajo con Git (Creación de Nuevas Versiones)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Cuando vayas a realizar modificaciones en el código, te sugerimos seguir este flujo de trabajo estándar y seguro:
+
+### 1. Crear una Rama para tu Cambio
+No trabajes directamente sobre la rama `main`. Crea una rama limpia y descriptiva para tus cambios:
+```bash
+git checkout -b feature/nombre-de-tu-mejora
+```
+
+### 2. Realizar Cambios y Validar Localmente
+Realiza tus modificaciones de código en la carpeta `src/`.
+- Verifica que el servidor (`pnpm start:dev`) compile sin errores.
+- Ejecuta los tests con `pnpm test` y asegúrate de que todo pase al 100%.
+
+### 3. Confirmar tus Cambios (Git Commit)
+Cuando todo esté listo y probado, prepara tus archivos y realiza un commit:
+```bash
+# 1. Comprobar qué archivos han sido modificados o agregados
+git status
+
+# 2. Agregar los archivos específicos que modificaste
+git add src/ruta/al/archivo.ts
+
+# 3. Crear el commit con un mensaje descriptivo (estilo Semantic Commits)
+git commit -m "feat: agregar validación adicional en el módulo de productos"
+```
+
+### 4. Crear una Nueva Versión (Merge y Tag)
+Una vez que tus cambios han sido aprobados y deseas integrarlos y generar una nueva versión del proyecto:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# 1. Volver a la rama principal
+git checkout main
+
+# 2. Asegurarse de tener la última versión de main
+git pull origin main
+
+# 3. Fusionar tu rama de cambios
+git merge feature/nombre-de-tu-mejora
+
+# 4. Crear una etiqueta (tag) para la nueva versión (ej: v1.1.0)
+git tag -a v1.1.0 -m "Versión 1.1.0: Añadida funcionalidad X"
+
+# 5. Subir los cambios y la nueva etiqueta al repositorio remoto
+git push origin main --follow-tags
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🔒 Estructura del Backend y Características de Seguridad
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Baja Lógica**: Las peticiones de eliminación de productos (`DELETE /products/:id`) no eliminan físicamente los datos, sino que cambian su estado (`isActive = false`) para preservar la integridad de la base de datos.
+- **Auto-Semilla (Seeding)**: En el primer arranque, la aplicación crea automáticamente el usuario Administrador y genera la clave de API inicial para Herb de forma automática basándose en las variables del archivo `.env`.
+- **Autenticación Combinada**: Los endpoints de `/products` aceptan tanto tokens JWT (cabecera `Authorization: Bearer <token>`) como ApiKeys (cabecera `x-api-key` o `Authorization: ApiKey <key>`).
